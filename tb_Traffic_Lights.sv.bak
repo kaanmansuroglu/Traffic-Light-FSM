@@ -1,0 +1,72 @@
+`timescale 1ns / 1ps
+
+module tb_Traffic_Lights();
+
+    // Testbench Sinyalleri
+    logic clk;
+    logic reset;
+    logic TAORB;
+    logic [2:0] LA;
+    logic [2:0] LB;
+
+    // Test Edilecek Modülün (UUT) Çağrılması
+    Traffic_Lights uut (
+        .clk(clk),
+        .reset(reset),
+        .TAORB(TAORB),
+        .LA(LA),
+        .LB(LB)
+    );
+
+    // Saat (Clock) Sinyali Üretimi - 10ns periyot (100 MHz)
+    always #5 clk = ~clk;
+
+    // Simülasyon Senaryosu
+    initial begin
+        // Başlangıç Değerleri
+        clk = 0;
+        reset = 1;
+        TAORB = 1; // Başlangıçta A sokağında trafik var kabul edelim (S0'da kalması için)
+
+        // 20ns bekle ve reset'i kaldır
+        #20;
+        reset = 0;
+        $display("Zaman=%0t: Reset kaldirildi. Beklenen Durum: S0 (LA=Yesil, LB=Kirmizi)", $time);
+        
+        // S0 durumunda biraz bekle
+        #30; 
+        
+        // S0 -> S1 Geçişini Tetikle (TAORB = 0 yapıyoruz)
+        $display("Zaman=%0t: TAORB = 0 yapildi. S1'e (Sari isik) gecis bekleniyor.", $time);
+        TAORB = 0;
+        
+        // S1 Durumu: 5 clock cycle (50ns) sürecek. Geçişi görmek için 70ns bekliyoruz.
+        #70; 
+        
+        // S1 -> S2 Geçişi tamamlandı
+        $display("Zaman=%0t: 5 sayım bitti. Beklenen Durum: S2 (LA=Kirmizi, LB=Yesil)", $time);
+        #30;
+        
+        // S2 -> S3 Geçişini Tetikle (TAORB = 1 yapıyoruz)
+        $display("Zaman=%0t: TAORB = 1 yapildi. S3'e (Sari isik) gecis bekleniyor.", $time);
+        TAORB = 1;
+        
+        // S3 Durumu: 5 clock cycle (50ns) sürecek. Geçişi görmek için 70ns bekliyoruz.
+        #70;
+        
+        // S3 -> S0 Geçişi tamamlandı
+        $display("Zaman=%0t: 5 sayım bitti. Basa donuldu. Beklenen Durum: S0", $time);
+        #30;
+
+        // Simülasyonu Bitir
+        $display("Zaman=%0t: Simulasyon tamamlandi.", $time);
+        $finish;
+    end
+
+    // Konsol Çıktısı (Değişimleri Gözlemlemek İçin)
+    initial begin
+        $monitor("Zaman=%0t | reset=%b | TAORB=%b | LA=%b (RGB) | LB=%b (RGB)", 
+                 $time, reset, TAORB, LA, LB);
+    end
+
+endmodule

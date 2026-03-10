@@ -1,0 +1,6 @@
+module traffic_light ( input  logic r,a,b,
+							 input logic clk,
+							 input logic reset,
+							 output logic y);
+	assign y = r & a | ~b ;
+end module
